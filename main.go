@@ -3,30 +3,23 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"os/user"
 	"path/filepath"
+	"strings"
 	"time"
 
-	"github.com/soumya92/barista/pango/icons/ionicons"
-
-	"github.com/soumya92/barista/pango/icons/fontawesome"
-
-	"github.com/soumya92/barista/pango"
-
-	"github.com/soumya92/barista/colors"
-
-	"github.com/soumya92/barista/outputs"
-
-	"github.com/soumya92/barista/bar"
-
-	"github.com/soumya92/barista/modules/cpuload"
-
-	"github.com/soumya92/barista/modules/clock"
-
-	"github.com/soumya92/barista/modules/netspeed"
-
 	"github.com/soumya92/barista"
+	"github.com/soumya92/barista/bar"
+	"github.com/soumya92/barista/colors"
 	"github.com/soumya92/barista/modules/battery"
+	"github.com/soumya92/barista/modules/clock"
+	"github.com/soumya92/barista/modules/cpuload"
+	"github.com/soumya92/barista/modules/netspeed"
+	"github.com/soumya92/barista/outputs"
+	"github.com/soumya92/barista/pango"
+	"github.com/soumya92/barista/pango/icons/fontawesome"
+	"github.com/soumya92/barista/pango/icons/ionicons"
 )
 
 var (
@@ -65,19 +58,38 @@ func main() {
 	netspeedMod.OutputFunc(func(speeds netspeed.Speeds) bar.Output {
 		tx := pango.Text("↑")
 		switch {
-		case speeds.Tx.KilobitsPerSecond() < 1:
+		case speeds.Tx.BitsPerSecond() == 0:
 			tx.Color(darkGrey)
+		case speeds.Tx.KilobitsPerSecond() < 5:
+			tx.Color(grey)
 		case speeds.Tx.MegabitsPerSecond() > 1:
 			tx.Bold().Color(yellow)
 		}
 		rx := pango.Text("↓")
 		switch {
-		case speeds.Rx.KilobitsPerSecond() < 1:
+		case speeds.Rx.BitsPerSecond() == 0:
 			rx.Color(darkGrey)
+		case speeds.Rx.KilobitsPerSecond() < 5:
+			rx.Color(grey)
 		case speeds.Rx.MegabitsPerSecond() > 1:
 			rx.Bold().Color(yellow)
 		}
-		return outputs.Pango(spacer, tx, spacer, rx, spacer)
+		cmd := exec.Command(
+			"/usr/bin/env",
+			"sh", "-c",
+			"nmcli connection show --active | grep wifi | cut -d' ' -f1",
+		)
+		out, err := cmd.Output()
+		if len(out) == 0 {
+			out = []byte("<??>")
+		}
+		name := pango.Text(strings.TrimSpace(string(out)))
+		if err != nil {
+			name.Color(redStrong)
+		} else {
+			name.Color(grey)
+		}
+		return outputs.Pango(name, spacer, tx, spacer, rx, spacer)
 	})
 	barista.Add(netspeedMod)
 
