@@ -118,18 +118,18 @@ func main() {
 		perc := info.Remaining()
 
 		switch {
-		case perc >= 0.9:
-			color = greenStrong
-		case perc <= 0.75:
-			icon = pango.Icon("fa-battery-three-quareters")
-		case perc <= 0.5:
-			icon = pango.Icon("fa-battery-half")
-			color = yellow
+		case perc < 0.1:
+			icon = pango.Icon("fa-battery-empty")
 		case perc <= 0.25:
 			icon = pango.Icon("fa-battery-quarter")
 			color = red
-		case perc < 0.1:
-			icon = pango.Icon("fa-battery-empty")
+		case perc <= 0.5:
+			icon = pango.Icon("fa-battery-half")
+			color = yellow
+		case perc <= 0.75:
+			icon = pango.Icon("fa-battery-three-quarters")
+		case perc >= 0.9:
+			color = greenStrong
 		}
 
 		out := outputs.Pango(
