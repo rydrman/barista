@@ -27,8 +27,9 @@ var (
 	redStrong     = colors.Hex("#BE5046")
 	green         = colors.Hex("#98C379")
 	greenStrong   = colors.Hex("#98C379")
-	yellow        = colors.Hex("#E5C07B")
-	yellowStrong  = colors.Hex("#D19A66")
+	yellow        = colors.Hex("#EEEE00")
+	beige         = colors.Hex("#E5C07B")
+	burntOrange   = colors.Hex("#D19A66")
 	blue          = colors.Hex("#61AFEF")
 	blueStrong    = colors.Hex("#61AFEF")
 	magenta       = colors.Hex("#C678DD")
@@ -63,7 +64,7 @@ func main() {
 		case speeds.Tx.KilobitsPerSecond() < 5:
 			tx.Color(grey)
 		case speeds.Tx.MegabitsPerSecond() > 1:
-			tx.Bold().Color(yellow)
+			tx.Bold().Color(beige)
 		}
 		rx := pango.Text("↓")
 		switch {
@@ -72,7 +73,7 @@ func main() {
 		case speeds.Rx.KilobitsPerSecond() < 5:
 			rx.Color(grey)
 		case speeds.Rx.MegabitsPerSecond() > 1:
-			rx.Bold().Color(yellow)
+			rx.Bold().Color(beige)
 		}
 		cmd := exec.Command(
 			"/usr/bin/env",
@@ -101,7 +102,7 @@ func main() {
 		case load[0] >= 0.9:
 			out.Color(red)
 		case load[0] >= 0.5:
-			out.Color(yellow)
+			out.Color(beige)
 		default:
 			out.Color(green)
 		}
@@ -125,19 +126,27 @@ func main() {
 			color = red
 		case perc <= 0.5:
 			icon = pango.Icon("fa-battery-half")
-			color = yellow
+			color = beige
 		case perc <= 0.75:
 			icon = pango.Icon("fa-battery-three-quarters")
 		case perc >= 0.9:
 			color = greenStrong
 		}
 
-		out := outputs.Pango(
+		nodes := []interface{}{
 			spacer,
-			icon,
-			pango.Textf(" %d%%", int(info.Remaining()*100)),
+			icon.Color(color),
+			pango.Textf(" %d%%", int(info.Remaining()*100)).Color(color),
 			spacer,
-		).Color(color)
+		}
+
+		if info.PluggedIn() {
+			charge := pango.Icon("fa-bolt")
+			charge.Color(yellow)
+			nodes = append(nodes, charge, spacer)
+		}
+
+		out := outputs.Pango(nodes...)
 
 		if perc < 0.1 {
 			out.Urgent(true)
