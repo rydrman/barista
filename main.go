@@ -6,15 +6,19 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
+
+	"github.com/soumya92/barista/modules/sysinfo"
+
+	"github.com/soumya92/barista/modules/volume"
 
 	"github.com/soumya92/barista"
 	"github.com/soumya92/barista/bar"
 	"github.com/soumya92/barista/colors"
 	"github.com/soumya92/barista/modules/battery"
 	"github.com/soumya92/barista/modules/clock"
-	"github.com/soumya92/barista/modules/cpuload"
 	"github.com/soumya92/barista/modules/netspeed"
 	"github.com/soumya92/barista/outputs"
 	"github.com/soumya92/barista/pango"
@@ -94,14 +98,19 @@ func main() {
 	})
 	barista.Add(netspeedMod)
 
-	cpuloadMod := cpuload.New()
-	cpuloadMod.OutputFunc(func(load cpuload.LoadAvg) bar.Output {
+	sysInfoMod := sysinfo.New()
+	sysInfoMod.OutputFunc(func(info sysinfo.Info) bar.Output {
 
-		out := outputs.Pango(spacer, pango.Textf("%.2f", load[0]), spacer)
+		load := info.Loads[0] / float64(runtime.NumCPU())
+		out := outputs.Pango(
+			spacer,
+			pango.Textf("%2d%%", int(load*100)),
+			spacer,
+		)
 		switch {
-		case load[0] >= 0.9:
+		case load >= 0.9:
 			out.Color(red)
-		case load[0] >= 0.5:
+		case load >= 0.5:
 			out.Color(beige)
 		default:
 			out.Color(green)
@@ -109,7 +118,7 @@ func main() {
 		return out
 
 	})
-	barista.Add(cpuloadMod)
+	barista.Add(sysInfoMod)
 
 	batteryMod := battery.New("BAT0")
 	batteryMod.OutputFunc(func(info battery.Info) bar.Output {
@@ -159,9 +168,49 @@ func main() {
 
 	clockMod := clock.Local()
 	clockMod.OutputFunc(time.Minute, func(t time.Time) bar.Output {
-		return outputs.Text(t.Format("Jan 2 15:04")).Color(blue)
+		return outputs.Pango(
+			spacer,
+			pango.Text(t.Format("Jan 2 15:04")).Color(blue),
+			spacer,
+		)
 	})
 	barista.Add(clockMod)
+
+	volumeMod := volume.DefaultMixer()
+	volumeMod.OutputFunc(func(v volume.Volume) bar.Output {
+		curr := v.Pct()
+		nodes := []interface{}{spacer}
+		for i := 0; i < 10; i++ {
+			node := pango.Icon("fa-square")
+			if v.Mute {
+				node = pango.Icon("fa-minus-square")
+			}
+			col := blue
+			switch {
+
+			case i*10 >= curr:
+				col = darkGrey
+
+			case curr > 100:
+				col = redStrong
+			case i >= 8:
+				col = red
+			case i >= 6:
+				col = burntOrange
+			case i >= 4:
+				col = yellow
+			case i >= 2:
+				col = green
+
+			}
+			node.Color(col)
+			nodes = append(nodes, node)
+
+		}
+		nodes = append(nodes, spacer, pango.Textf("%3d%%", int(curr)))
+		return outputs.Pango(nodes...)
+	})
+	barista.Add(volumeMod)
 
 	err = barista.Run()
 	if err != nil {
