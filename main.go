@@ -48,6 +48,10 @@ var (
 	darkGrey      = colors.Hex("#5C6370")
 
 	spacer = pango.Text(" ").XXSmall()
+
+	conf = config{
+		NetInterface: "eth0",
+	}
 )
 
 type config struct {
@@ -59,9 +63,6 @@ func main() {
 	usr, err := user.Current()
 	failIfError(err)
 
-	conf := config{
-		NetInterface: "eth0",
-	}
 	home := usr.HomeDir
 	f, err := os.Open(filepath.Join(home, ".config/barista/config"))
 	if os.IsNotExist(err) {
@@ -129,7 +130,7 @@ func renderNet(speeds netspeed.Speeds) bar.Output {
 	cmd := exec.Command( // nolint: gas
 		"/usr/bin/env",
 		"sh", "-c",
-		"nmcli connection show --active | grep wifi | cut -d' ' -f1",
+		"nmcli connection show --active | grep "+conf.NetInterface+" | rev | cut -d' ' -f8- | rev",
 	)
 	out, err := cmd.Output()
 	if len(out) == 0 {
