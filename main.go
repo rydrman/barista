@@ -126,7 +126,7 @@ func renderNet(speeds netspeed.Speeds) bar.Output {
 	case speeds.Rx.MegabitsPerSecond() > 1:
 		rx.Bold().Color(beige)
 	}
-	cmd := exec.Command(
+	cmd := exec.Command( // nolint: gas
 		"/usr/bin/env",
 		"sh", "-c",
 		"nmcli connection show --active | grep wifi | cut -d' ' -f1",
@@ -166,6 +166,10 @@ func renderSysInfo(info sysinfo.Info) bar.Output {
 }
 
 func renderBattery(info battery.Info) bar.Output {
+
+	if info.Status == battery.Disconnected {
+		return nil
+	}
 
 	icon := pango.Icon("fa-battery-full")
 	color := green
