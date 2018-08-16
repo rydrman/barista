@@ -130,7 +130,7 @@ func renderNet(speeds netspeed.Speeds) bar.Output {
 	cmd := exec.Command( // nolint: gas
 		"/usr/bin/env",
 		"sh", "-c",
-		"nmcli connection show --active | grep "+conf.NetInterface+" | rev | cut -d' ' -f8- | rev",
+		"nmcli --fields=DEVICE,NAME connection show --active | grep "+conf.NetInterface+" | cut -d' ' -f3-",
 	)
 	out, err := cmd.Output()
 	if len(out) == 0 {
