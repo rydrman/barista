@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"image/color"
 	"os"
@@ -49,12 +50,27 @@ var (
 	spacer = pango.Text(" ").XXSmall()
 )
 
+type config struct {
+	NetInterface string `json:"net.iface"`
+}
+
 func main() {
 
 	usr, err := user.Current()
 	failIfError(err)
 
+	conf := config{
+		NetInterface: "eth0",
+	}
 	home := usr.HomeDir
+	f, err := os.Open(filepath.Join(home, ".config/barista/config"))
+	if os.IsNotExist(err) {
+		// leave defaults
+	} else {
+		err = json.NewDecoder(f).Decode(&conf)
+		f.Close() // nolint: gas
+		failIfError(err)
+	}
 
 	err = fontawesome.Load(filepath.Join(home, "source", "Font-Awesome"))
 	failIfError(err)
@@ -62,24 +78,24 @@ func main() {
 	err = ionicons.Load(filepath.Join(home, "source", "ionicons"))
 	failIfError(err)
 
-	netspeedMod := netspeed.New("wlp2s0")
-	netspeedMod.OutputFunc(renderNet)
+	netspeedMod := netspeed.New(conf.NetInterface)
+	netspeedMod.Output(renderNet)
 	barista.Add(netspeedMod)
 
 	sysInfoMod := sysinfo.New()
-	sysInfoMod.OutputFunc(renderSysInfo)
+	sysInfoMod.Output(renderSysInfo)
 	barista.Add(sysInfoMod)
 
-	batteryMod := battery.New("BAT0")
-	batteryMod.OutputFunc(renderBattery)
+	batteryMod := battery.All()
+	batteryMod.Output(renderBattery)
 	barista.Add(batteryMod)
 
 	clockMod := clock.Local()
-	clockMod.OutputFunc(time.Second, renderTime)
+	clockMod.Output(time.Second, renderTime)
 	barista.Add(clockMod)
 
 	volumeMod := volume.DefaultMixer()
-	volumeMod.OutputFunc(renderVolume)
+	volumeMod.Output(renderVolume)
 	barista.Add(volumeMod)
 
 	err = barista.Run()
