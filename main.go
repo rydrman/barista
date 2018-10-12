@@ -12,22 +12,19 @@ import (
 	"strings"
 	"time"
 
+	"barista.run"
+	"barista.run/bar"
+	"barista.run/colors"
+	"barista.run/modules/battery"
+	"barista.run/modules/clock"
+	"barista.run/modules/netspeed"
+	"barista.run/modules/sysinfo"
+	"barista.run/modules/volume"
+	"barista.run/outputs"
+	"barista.run/pango"
+	"barista.run/pango/icons/fontawesome"
+	"barista.run/pango/icons/ionicons"
 	"github.com/lucasb-eyer/go-colorful"
-
-	"github.com/soumya92/barista/modules/sysinfo"
-
-	"github.com/soumya92/barista/modules/volume"
-
-	"github.com/soumya92/barista"
-	"github.com/soumya92/barista/bar"
-	"github.com/soumya92/barista/colors"
-	"github.com/soumya92/barista/modules/battery"
-	"github.com/soumya92/barista/modules/clock"
-	"github.com/soumya92/barista/modules/netspeed"
-	"github.com/soumya92/barista/outputs"
-	"github.com/soumya92/barista/pango"
-	"github.com/soumya92/barista/pango/icons/fontawesome"
-	"github.com/soumya92/barista/pango/icons/ionicons"
 )
 
 var (
@@ -130,7 +127,7 @@ func renderNet(speeds netspeed.Speeds) bar.Output {
 	cmd := exec.Command( // nolint: gas
 		"/usr/bin/env",
 		"sh", "-c",
-		"nmcli --fields=DEVICE,NAME connection show --active | grep "+conf.NetInterface+" | cut -d' ' -f3-",
+		"nmcli -fields DEVICE,NAME connection show --active | grep "+conf.NetInterface+" | cut -d' ' -f3-",
 	)
 	out, err := cmd.Output()
 	if len(out) == 0 {
@@ -230,9 +227,9 @@ func renderVolume(v volume.Volume) bar.Output {
 	curr := v.Pct()
 	nodes := []interface{}{spacer}
 	for i := 0; i < 10; i++ {
-		node := pango.Icon("fa-square")
+		node := pango.Icon("fa-square").Bold()
 		if v.Mute {
-			node = pango.Icon("fa-minus-square")
+			node = pango.Icon("fa-minus-square").Bold()
 		}
 		col := rangeColor(i * 10)
 		switch {
