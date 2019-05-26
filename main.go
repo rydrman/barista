@@ -16,6 +16,7 @@ import (
 	"barista.run/bar"
 	"barista.run/colors"
 	"barista.run/modules/battery"
+	"barista.run/modules/bluetooth"
 	"barista.run/modules/clock"
 	"barista.run/modules/netspeed"
 	"barista.run/modules/sysinfo"
@@ -76,6 +77,10 @@ func main() {
 	err = ionicons.Load(filepath.Join(home, "source", "ionicons"))
 	failIfError(err)
 
+	bluetoothMod := bluetooth.DefaultAdapter()
+	bluetoothMod.Output(renderBluetooth)
+	barista.Add(bluetoothMod)
+
 	netspeedMod := netspeed.New(conf.NetInterface)
 	netspeedMod.Output(renderNet)
 	barista.Add(netspeedMod)
@@ -101,6 +106,25 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
+}
+
+func renderBluetooth(info bluetooth.AdapterInfo) bar.Output {
+
+	icon := pango.Icon("fab-bluetooth-b")
+
+	color := blueStrong
+	if !info.Powered {
+		color = red
+	}
+
+	nodes := []interface{}{
+		spacer,
+		icon.Color(color),
+		spacer,
+	}
+
+	return outputs.Pango(nodes...)
 
 }
 
@@ -139,7 +163,7 @@ func renderNet(speeds netspeed.Speeds) bar.Output {
 	} else {
 		name.Color(grey)
 	}
-	return outputs.Pango(name, spacer, tx, spacer, rx, spacer)
+	return outputs.Pango(spacer, name, spacer, tx, spacer, rx, spacer)
 
 }
 

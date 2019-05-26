@@ -1,9 +1,10 @@
 module github.com/rydrman/barista
 
 require (
-	barista.run v0.0.0-20181012062119-86cbbd916c8f
+	barista.run v0.0.0-20190430204214-90a34193aba8
 	github.com/dustin/go-humanize v1.0.0 // indirect
-	github.com/godbus/dbus v4.1.0+incompatible // indirect
+	github.com/fsnotify/fsnotify v1.4.7 // indirect
+	github.com/godbus/dbus v5.0.1+incompatible // indirect
 	github.com/lucasb-eyer/go-colorful v0.0.0-20180709185858-c7842319cf3a
 	github.com/martinlindhe/unit v0.0.0-20180817222220-284ab7627fae // indirect
 	github.com/soumya92/barista v0.0.0-20181012062119-86cbbd916c8f
